@@ -5,6 +5,7 @@ import (
 	"crypto_parser/internal/reporting/domain/ports"
 	"crypto_parser/internal/reporting/domain/valueobject"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"time"
@@ -61,6 +62,16 @@ func (p PdfGenerator) renderChart(data valueobject.ReportData) ([]byte, error) {
 		return chart.Style{FillColor: c, StrokeColor: c}
 	}
 
+	v1 := data.MarketCap.Change24hPct
+	v2 := data.CMC20.Change24hPct
+
+	// Y range always includes 0; pad 30% of the data spread (min 0.5%)
+	yMin := math.Min(math.Min(v1, v2), 0)
+	yMax := math.Max(math.Max(v1, v2), 0)
+	pad := math.Max(math.Max(math.Abs(yMin), math.Abs(yMax))*0.3, 0.5)
+	yMin -= pad
+	yMax += pad
+
 	bc := chart.BarChart{
 		Title: "24h % Changes",
 		TitleStyle: chart.Style{
@@ -75,10 +86,11 @@ func (p PdfGenerator) renderChart(data valueobject.ReportData) ([]byte, error) {
 		BarWidth: 90,
 		YAxis: chart.YAxis{
 			Style: chart.Style{FontSize: 10},
+			Range: &chart.ContinuousRange{Min: yMin, Max: yMax},
 		},
 		Bars: []chart.Value{
-			{Label: "Market Cap", Value: data.MarketCap.Change24hPct, Style: styleFor(data.MarketCap.Change24hPct)},
-			{Label: "CMC20", Value: data.CMC20.Change24hPct, Style: styleFor(data.CMC20.Change24hPct)},
+			{Label: "Market Cap", Value: v1, Style: styleFor(v1)},
+			{Label: "CMC20", Value: v2, Style: styleFor(v2)},
 		},
 	}
 
