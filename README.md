@@ -5,7 +5,7 @@ A Telegram bot that fetches live crypto market data from CoinMarketCap and deliv
 ## Report preview
 
 <!-- Add a screenshot: put the image at assets/report_preview.png and uncomment the line below -->
-<!-- ![Report preview](assets/report_preview.png) -->
+[Report preview](assets/report_preview.png)
 
 ## Features
 
@@ -27,7 +27,7 @@ A Telegram bot that fetches live crypto market data from CoinMarketCap and deliv
 
 ### Prerequisites
 
-- Go 1.25+
+- Go 1.26+
 - CoinMarketCap API key ([free tier](https://coinmarketcap.com/api/))
 - Telegram bot token from [@BotFather](https://t.me/BotFather)
 
