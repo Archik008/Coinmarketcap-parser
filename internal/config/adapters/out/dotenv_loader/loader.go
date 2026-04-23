@@ -2,40 +2,36 @@ package dotenvloader
 
 import (
 	"crypto_parser/internal/config/domain/valueobject"
-	"os"
+	"io"
 	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type DotEnvCfg struct {
-	path          string
+	r             io.Reader
 	CoinMarketCap valueobject.CoinMarketCapCfg
 	BotCfg        valueobject.BotCfg
 	CreatorCfg    valueobject.CreatorCfg
 }
 
-func NewDotEnvCfg(path string) *DotEnvCfg {
-	return &DotEnvCfg{path: path}
+func NewDotEnvCfg(r io.Reader) *DotEnvCfg {
+	return &DotEnvCfg{r: r}
 }
 
 func (d *DotEnvCfg) Load() error {
-	if err := godotenv.Load(d.path); err != nil {
-		return err
-	}
-
-	url := os.Getenv("COINMARKETCAP_URL")
-	apiKey := os.Getenv("COINMARKETCAP_API_KEY")
-	botApiKey := os.Getenv("BOT_TOKEN")
-	creator_id := os.Getenv("CREATOR_USER_ID")
-
-	intID, err := strconv.Atoi(creator_id)
+	env, err := godotenv.Parse(d.r)
 	if err != nil {
 		return err
 	}
 
-	d.CoinMarketCap = valueobject.NewCoinMarketCapCfg(url, apiKey)
-	d.BotCfg = valueobject.NewBotCfg(botApiKey)
+	intID, err := strconv.Atoi(env["CREATOR_USER_ID"])
+	if err != nil {
+		return err
+	}
+
+	d.CoinMarketCap = valueobject.NewCoinMarketCapCfg(env["COINMARKETCAP_URL"], env["COINMARKETCAP_API_KEY"])
+	d.BotCfg = valueobject.NewBotCfg(env["BOT_TOKEN"])
 	d.CreatorCfg = valueobject.NewCreatorCfg(intID)
 
 	return nil

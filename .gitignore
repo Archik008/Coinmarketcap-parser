@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.sample
+app.env
 
 # PDF output
 temp_files/

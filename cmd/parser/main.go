@@ -1,19 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	dotenvloader "crypto_parser/internal/config/adapters/out/dotenv_loader"
 	"crypto_parser/internal/parser/adapters/out/coinmarketcap"
 	service "crypto_parser/internal/parser/application"
 	"crypto_parser/internal/parser/infra"
 	"crypto_parser/internal/reporting/adapters/out"
+	_ "embed"
 	"fmt"
 	"log"
 	"sync"
 )
 
+//go:embed app.env
+var envFile []byte
+
 func main() {
-	cfg := dotenvloader.NewDotEnvCfg(".env")
+	cfg := dotenvloader.NewDotEnvCfg(bytes.NewReader(envFile))
 	if err := cfg.Load(); err != nil {
 		log.Fatal(err)
 	}
