@@ -1,0 +1,15 @@
+# Env files — ignore all, except the sample
+.env
+.env.*
+!.env.sample
+
+# PDF output
+temp_files/
+
+# Binaries
+bin/
+*.exe
+
+# Go build cache
+*.test
+*.out
