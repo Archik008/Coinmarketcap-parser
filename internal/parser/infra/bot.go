@@ -31,14 +31,12 @@ type Bot struct {
 	cancel        context.CancelFunc
 }
 
-func NewBot(token string, creatorID int64, parser in.ParserUseCase, reportService ports.ReportGenerator) *Bot {
-	return &Bot{token: token, creatorID: creatorID, parser: parser, reportService: reportService}
+func NewBot(token string, creatorID int64, parser in.ParserUseCase, reportService ports.ReportGenerator, cancel context.CancelFunc) *Bot {
+	return &Bot{token: token, creatorID: creatorID, parser: parser, reportService: reportService, cancel: cancel}
 }
 
 // Run запускает long-polling и блокируется до отмены ctx.
 func (b *Bot) Run(ctx context.Context) error {
-	ctx, b.cancel = context.WithCancel(ctx)
-
 	bot, err := gotgbot.NewBot(b.token, nil)
 	if err != nil {
 		return fmt.Errorf("bot init: %w", err)

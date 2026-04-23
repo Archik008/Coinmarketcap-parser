@@ -5,24 +5,27 @@ import (
 	"crypto_parser/internal/config/domain/valueobject"
 	"crypto_parser/internal/parser/domain"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 )
 
 type Scraper struct {
-	client  *http.Client
 	cfg     valueobject.CoinMarketCapCfg
 	queueCh chan struct{}
+	client  *http.Client
+	wg      *sync.WaitGroup
 }
 
-func NewScraper(cfg valueobject.CoinMarketCapCfg, ctx context.Context) *Scraper {
+func NewScraper(cfg valueobject.CoinMarketCapCfg, ctx context.Context, wg *sync.WaitGroup) *Scraper {
 	scraper := &Scraper{
 		client:  &http.Client{Timeout: 15 * time.Second},
 		cfg:     cfg,
 		queueCh: make(chan struct{}, 1),
 	}
 
-	scraper.startQueueListener(ctx)
+	scraper.startQueueListener(wg, ctx)
 
 	return scraper
 }
@@ -38,18 +41,25 @@ func (s *Scraper) params(path string) fetchParams {
 	}
 }
 
-func (s *Scraper) startQueueListener(ctx context.Context) {
-	go func() {
+func (s *Scraper) startQueueListener(wg *sync.WaitGroup, ctx context.Context) {
+	wg.Go(func() {
 		for {
-			time.Sleep(time.Second * 2)
+			// сначала ждём 2s — буфер остаётся занятым, второй запрос блокируется
+			select {
+			case <-time.After(2 * time.Second):
+			case <-ctx.Done():
+				slog.Info("Queue listener stopped")
+				return
+			}
+			// дренируем канал
 			select {
 			case <-s.queueCh:
 			case <-ctx.Done():
-				fmt.Println("Listener has stopped")
+				slog.Info("Queue listener stopped at 2 select")
 				return
 			}
 		}
-	}()
+	})
 }
 
 func (s *Scraper) FetchMarketCap(ctx context.Context) (domain.MarketCap, error) {

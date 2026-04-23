@@ -7,7 +7,9 @@ import (
 	service "crypto_parser/internal/parser/application"
 	"crypto_parser/internal/parser/infra"
 	"crypto_parser/internal/reporting/adapters/out"
+	"fmt"
 	"log"
+	"sync"
 )
 
 func main() {
@@ -19,12 +21,18 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	coinMarketScraper := coinmarketcap.NewScraper(cfg.CoinMarketCap, ctx)
+	var wg sync.WaitGroup
+
+	coinMarketScraper := coinmarketcap.NewScraper(cfg.CoinMarketCap, ctx, &wg)
 	parserService := service.NewParserService(coinMarketScraper)
 
 	reportService := out.NewPdfGenerator("temp_files")
 
-	botInstance := infra.NewBot(cfg.BotCfg.ApiToken, int64(cfg.CreatorCfg.TgId), parserService, reportService)
+	botInstance := infra.NewBot(cfg.BotCfg.ApiToken, int64(cfg.CreatorCfg.TgId), parserService, reportService, cancel)
 
 	botInstance.Run(ctx)
+
+	fmt.Println("Graceful shutdown...")
+
+	wg.Wait()
 }

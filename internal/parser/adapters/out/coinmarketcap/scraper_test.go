@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -19,10 +20,13 @@ func newScraper(t *testing.T, handler http.HandlerFunc) *coinmarketcap.Scraper {
 	t.Helper()
 	srv := httptest.NewServer(handler)
 	t.Cleanup(srv.Close)
+
+	var wg sync.WaitGroup
+
 	scraper := coinmarketcap.NewScraper(valueobject.CoinMarketCapCfg{
 		Url:      srv.URL,
 		ApiToken: "test-key",
-	}, context.Background())
+	}, context.Background(), &wg)
 	return scraper
 }
 
@@ -380,7 +384,10 @@ func TestQueue_DifferentEndpointsShareQueue(t *testing.T) {
 
 	srv := httptest.NewServer(handler)
 	t.Cleanup(srv.Close)
-	s := coinmarketcap.NewScraper(valueobject.CoinMarketCapCfg{Url: srv.URL, ApiToken: "test-key"}, context.Background())
+
+	var wg sync.WaitGroup
+
+	s := coinmarketcap.NewScraper(valueobject.CoinMarketCapCfg{Url: srv.URL, ApiToken: "test-key"}, context.Background(), &wg)
 
 	start := time.Now()
 
