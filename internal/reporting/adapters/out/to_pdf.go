@@ -28,7 +28,7 @@ type PdfGenerator struct {
 }
 
 func NewPdfGenerator(basePath string) ports.ReportGenerator {
-	os.MkdirAll(basePath, os.ModeDir)
+	os.MkdirAll(basePath, 0o755)
 	return &PdfGenerator{
 		basePath: basePath,
 	}
