@@ -79,10 +79,10 @@ func (p PdfGenerator) renderChart(data valueobject.ReportData) ([]byte, error) {
 			FontColor: drawing.ColorFromHex("222222"),
 		},
 		Background: chart.Style{
-			Padding: chart.Box{Top: 40, Left: 30, Right: 30, Bottom: 50},
+			Padding: chart.Box{Top: 30, Left: 30, Right: 30, Bottom: 35},
 		},
 		Width:    520,
-		Height:   340,
+		Height:   220,
 		BarWidth: 90,
 		YAxis: chart.YAxis{
 			Style: chart.Style{FontSize: 10},
@@ -110,27 +110,27 @@ func (p PdfGenerator) renderPDF(data valueobject.ReportData, chartPNG []byte) (s
 
 	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
-	pdf.SetMargins(marginL, 20, marginL)
+	pdf.SetMargins(marginL, 15, marginL)
 
 	// ── Заголовок ────────────────────────────────────────────────
-	pdf.SetFont("Helvetica", "B", 20)
+	pdf.SetFont("Helvetica", "B", 18)
 	pdf.SetTextColor(30, 30, 30)
-	pdf.CellFormat(pageW, 10, "Crypto Market Report", "", 1, "C", false, 0, "")
+	pdf.CellFormat(pageW, 9, "Crypto Market Report", "", 1, "C", false, 0, "")
 
 	pdf.SetFont("Helvetica", "", 9)
 	pdf.SetTextColor(130, 130, 130)
-	pdf.CellFormat(pageW, 6, data.GeneratedAt.Format("02 Jan 2006, 15:04 UTC"), "", 1, "C", false, 0, "")
-	pdf.Ln(4)
+	pdf.CellFormat(pageW, 5, data.GeneratedAt.Format("02 Jan 2006, 15:04 UTC"), "", 1, "C", false, 0, "")
+	pdf.Ln(2)
 	hline(pdf, pageW)
-	pdf.Ln(5)
+	pdf.Ln(3)
 
 	// ── CMC20 & Market Cap ───────────────────────────────────────
 	metricRow(pdf, pageW, "CMC20 Index", formatUSD(data.CMC20.Value), data.CMC20.Change24hPct)
-	pdf.Ln(3)
+	pdf.Ln(2)
 	metricRow(pdf, pageW, "Market Cap", formatUSD(data.MarketCap.Value), data.MarketCap.Change24hPct)
-	pdf.Ln(5)
+	pdf.Ln(3)
 	hline(pdf, pageW)
-	pdf.Ln(5)
+	pdf.Ln(3)
 
 	// ── Fear & Greed ─────────────────────────────────────────────
 	r, g, b := fgRGB(data.FearGreed.Label)
@@ -139,7 +139,7 @@ func (p PdfGenerator) renderPDF(data valueobject.ReportData, chartPNG []byte) (s
 		string(data.FearGreed.Label), r, g, b)
 	pdf.Ln(1)
 	progressBar(pdf, marginL, pageW, data.FearGreed.Value, 100, r, g, b)
-	pdf.Ln(6)
+	pdf.Ln(4)
 
 	// ── Altcoin Season ────────────────────────────────────────────
 	var ar, ag, ab int
@@ -162,24 +162,24 @@ func (p PdfGenerator) renderPDF(data valueobject.ReportData, chartPNG []byte) (s
 	pdf.CellFormat(pageW, 5,
 		fmt.Sprintf("%d / %d coins outperformed BTC (7d)", data.AltcoinSeason.Outperformed, data.AltcoinSeason.Total),
 		"", 1, "L", false, 0, "")
-	pdf.Ln(6)
+	pdf.Ln(3)
 	hline(pdf, pageW)
-	pdf.Ln(6)
+	pdf.Ln(3)
 
 	// ── Chart ─────────────────────────────────────────────────────
-	// Чарт: 520×340px → при ширине pageW=170mm высота ≈ 170*(340/520) ≈ 111mm.
+	// Чарт: 520×220px → при ширине pageW=170mm высота ≈ 170*(220/520) ≈ 72mm.
 	// flow=false не двигает курсор, поэтому сдвигаем Y вручную.
-	const chartH = 111.0
+	const chartH = 72.0
 	chartY := pdf.GetY()
 	pdf.RegisterImageOptionsReader("chart",
 		fpdf.ImageOptions{ImageType: "PNG"},
 		bytes.NewReader(chartPNG))
 	pdf.ImageOptions("chart", marginL, chartY, pageW, chartH, false,
 		fpdf.ImageOptions{ImageType: "PNG"}, 0, "")
-	pdf.SetY(chartY + chartH + 4)
+	pdf.SetY(chartY + chartH + 2)
 
 	hline(pdf, pageW)
-	pdf.Ln(5)
+	pdf.Ln(3)
 
 	// ── Описание параметров ───────────────────────────────────────
 	descTitle(pdf, pageW, "About the metrics")
@@ -298,21 +298,21 @@ func formatChange(v float64) string {
 }
 
 func descTitle(pdf *fpdf.Fpdf, pageW float64, title string) {
-	pdf.SetFont("Helvetica", "B", 10)
+	pdf.SetFont("Helvetica", "B", 9)
 	pdf.SetTextColor(55, 55, 55)
-	pdf.CellFormat(pageW, 6, title, "", 1, "L", false, 0, "")
-	pdf.Ln(2)
+	pdf.CellFormat(pageW, 5, title, "", 1, "L", false, 0, "")
+	pdf.Ln(1)
 }
 
 func descItem(pdf *fpdf.Fpdf, pageW float64, label, text string) {
-	pdf.SetFont("Helvetica", "B", 9)
+	pdf.SetFont("Helvetica", "B", 8)
 	pdf.SetTextColor(80, 80, 80)
-	pdf.CellFormat(pageW, 5, label, "", 1, "L", false, 0, "")
+	pdf.CellFormat(pageW, 4, label, "", 1, "L", false, 0, "")
 
-	pdf.SetFont("Helvetica", "", 8)
+	pdf.SetFont("Helvetica", "", 7)
 	pdf.SetTextColor(120, 120, 120)
-	pdf.MultiCell(pageW, 4, text, "", "L", false)
-	pdf.Ln(2)
+	pdf.MultiCell(pageW, 3.5, text, "", "L", false)
+	pdf.Ln(1)
 }
 
 func fgRGB(label string) (r, g, b int) {
