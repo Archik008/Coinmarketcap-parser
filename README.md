@@ -6,6 +6,8 @@ A Telegram bot that fetches live crypto market data from CoinMarketCap and deliv
 
 <!-- Add a screenshot: put the image at assets/report_preview.png and uncomment the line below -->
 [Report preview](assets/report_preview.png)
+[Bot preview](https://t.me/coinmarketcap_parser_bot)
+
 
 ## Features
 
